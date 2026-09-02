@@ -1,0 +1,17 @@
+# Alapból LF minden szöveges fájlban (a .sh scriptek különben törnek a Mac-en)
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.swift text eol=lf
+*.yml  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+
+# PowerShell maradjon CRLF (Windows)
+*.ps1  text eol=crlf
+
+# Bináris
+*.png  binary
+*.jpg  binary
+*.pdf  binary
+*.xcassets/** binary

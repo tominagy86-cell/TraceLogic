@@ -1,0 +1,28 @@
+# --- Xcode / build (generált, borrowed Mac-en jön létre) ---
+*.xcodeproj/
+*.xcworkspace/
+!default.xcworkspace
+DerivedData/
+build/
+.build/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# --- XcodeGen által generált fájlok ---
+/App/Resources/Info.plist
+/App/Support/App.entitlements
+
+# --- SwiftPM ---
+.swiftpm/
+Package.resolved
+
+# --- macOS / editor ---
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# --- Fastlane / egyéb ---
+fastlane/report.xml

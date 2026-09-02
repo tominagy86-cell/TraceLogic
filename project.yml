@@ -1,0 +1,81 @@
+# XcodeGen spec — ez az egyetlen forrás a projekt nevéhez / bundle ID-hoz.
+# Az .xcodeproj-t NEM verziózzuk: a Mac-en `xcodegen generate` állítja elő ebből.
+# Átnevezés: scripts/rename-project.ps1 -NewName <UjNev>
+name: TraceLogic
+
+options:
+  bundleIdPrefix: com.tracelogic
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    MARKETING_VERSION: "0.0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    DEVELOPMENT_TEAM: ""        # <- töltsd ki a Mac-en (személyes team is jó eszközre)
+    CODE_SIGN_STYLE: Automatic
+
+packages:
+  HealthCore:
+    path: Packages/HealthCore
+
+targets:
+  TraceLogic:
+    type: application
+    platform: iOS
+    sources:
+      - path: App/Sources
+    resources:
+      - path: App/Resources
+        optional: true
+    info:
+      path: App/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: $(PRODUCT_NAME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        NSHealthShareUsageDescription: >-
+          A TraceLogic a Health adataidból személyes baseline-t épít, hogy megmutassa,
+          a mai állapotod hogyan tér el a saját szokásos értékeidtől. Az adatok az eszközödön maradnak.
+    entitlements:
+      path: App/Support/App.entitlements   # neutrális fájlnév — átnevezéskor nem kell hozzányúlni
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.background-delivery: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tracelogic.app
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1"
+    dependencies:
+      - package: HealthCore
+
+  TraceLogicTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: App/Tests
+    dependencies:
+      - target: TraceLogic
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  TraceLogic:
+    build:
+      targets:
+        TraceLogic: all
+        TraceLogicTests: [test]
+    test:
+      targets:
+        - TraceLogicTests
+    run:
+      config: Debug

@@ -1,0 +1,7 @@
+{
+  "projectName": "TraceLogic",
+  "displayName": "TraceLogic",
+  "bundleIdPrefix": "com.tracelogic",
+  "organizationName": "TraceLogic",
+  "_comment": "Ideiglenes név. Átnevezés MINDENHOL: scripts/rename-project.ps1 -NewName <UjNev> [-NewBundleIdPrefix com.pelda]. Ne szerkeszd kézzel a projectName-et itt."
+}
