@@ -34,12 +34,22 @@ public protocol HealthDataSource: Sendable {
         to end: Date,
         calendar: Calendar
     ) async throws -> [DailyStat]
+
+    /// Alvás-éjszakák (`SleepSessionBuilder`-rel összeállítva) a `[start, end)` tartományon.
+    func sleepSessions(from start: Date, to end: Date, calendar: Calendar) async throws -> [SleepSession]
+
+    /// Edzések a `[start, end)` tartományon, `start` szerint csökkenő sorrendben (legutóbbi elöl).
+    func workouts(from start: Date, to end: Date) async throws -> [WorkoutSummary]
 }
 
 public extension HealthDataSource {
-    /// Kényelmi overload az alapértelmezett naptárral.
+    /// Kényelmi overloadok az alapértelmezett naptárral.
     func dailyStats(for metric: MetricType, from start: Date, to end: Date) async throws -> [DailyStat] {
         try await dailyStats(for: metric, from: start, to: end, calendar: .current)
+    }
+
+    func sleepSessions(from start: Date, to end: Date) async throws -> [SleepSession] {
+        try await sleepSessions(from: start, to: end, calendar: .current)
     }
 }
 

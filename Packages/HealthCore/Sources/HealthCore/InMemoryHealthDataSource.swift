@@ -7,6 +7,8 @@ public actor InMemoryHealthDataSource: HealthDataSource {
     private var samplesByType: [MetricType: [MetricSample]]
     private var authorizedMetrics: Set<MetricType>
     private let available: Bool
+    private var sleepSegmentsStore: [SleepSegment] = []
+    private var workoutsStore: [WorkoutSummary] = []
 
     public init(
         samples: [MetricType: [MetricSample]] = [:],
@@ -29,6 +31,14 @@ public actor InMemoryHealthDataSource: HealthDataSource {
     public func add(_ sample: MetricSample) {
         samplesByType[sample.type, default: []].append(sample)
         samplesByType[sample.type]?.sort { $0.start < $1.start }
+    }
+
+    public func setSleepSegments(_ segments: [SleepSegment]) {
+        sleepSegmentsStore = segments
+    }
+
+    public func setWorkouts(_ workouts: [WorkoutSummary]) {
+        workoutsStore = workouts.sorted { $0.start < $1.start }
     }
 
     // MARK: - HealthDataSource
@@ -62,5 +72,18 @@ public actor InMemoryHealthDataSource: HealthDataSource {
     ) async throws -> [DailyStat] {
         let s = try await samples(for: metric, from: start, to: end)
         return DailyAggregator.aggregate(s, metric: metric, from: start, to: end, calendar: calendar)
+    }
+
+    public func sleepSessions(from start: Date, to end: Date, calendar: Calendar) async throws -> [SleepSession] {
+        guard end > start else { return [] }
+        let inRange = sleepSegmentsStore.filter { $0.start >= start && $0.start < end }
+        return SleepSessionBuilder.build(from: inRange, calendar: calendar)
+    }
+
+    public func workouts(from start: Date, to end: Date) async throws -> [WorkoutSummary] {
+        guard end > start else { return [] }
+        return workoutsStore
+            .filter { $0.start >= start && $0.start < end }
+            .sorted { $0.start > $1.start }
     }
 }
