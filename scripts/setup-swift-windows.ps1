@@ -84,7 +84,23 @@ if (-not $SkipSwift) {
     Write-Host "[skip] Swift" -ForegroundColor Yellow
 }
 
-# --- 4. VS Code Swift extension ---
+# --- 4. Swift-on-Windows buktató #1: runtime DLL-ek a toolchain bin-be ---
+# A SwiftPM/llbuild a fordító-alfolyamatnak nem adja át a Runtimes PATH-t, ezért
+# a swift-frontend.exe csendben elszáll (STATUS_DLL_NOT_FOUND). A DLL-eket a
+# swiftc.exe mellé másoljuk. (Toolchain-frissítés után: scripts\hc.ps1 fix)
+if (-not $SkipSwift) {
+    $swiftRoot = Join-Path $env:LOCALAPPDATA 'Programs\Swift'
+    $tc = Get-ChildItem "$swiftRoot\Toolchains" -Directory -EA SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+    $rt = Get-ChildItem "$swiftRoot\Runtimes"  -Directory -EA SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+    if ($tc -and $rt) {
+        Copy-Item "$($rt.FullName)\usr\bin\*.dll" "$($tc.FullName)\usr\bin\" -Force
+        Write-Host "[OK] runtime DLL-ek a toolchain bin-be masolva." -ForegroundColor Green
+    } else {
+        Write-Warning "Swift toolchain/runtimes nem talalhato - futtasd kesobb: scripts\hc.ps1 fix"
+    }
+}
+
+# --- 5. VS Code Swift extension ---
 if (-not $SkipVSCodeExtension -and (Get-Command code -ErrorAction SilentlyContinue)) {
     Write-Host "`n[*] VS Code 'Swift' extension..." -ForegroundColor Cyan
     try { & code --install-extension swiftlang.swift-vscode --force } catch { Write-Warning "VS Code extension: $_" }
@@ -96,8 +112,8 @@ Write-Host @"
 KESZ. Most:
   1) Zard be EZT az ablakot, nyiss egy UJ PowerShell-t (nem rendszergazda kell).
   2) swift --version
-  3) cd "$PSScriptRoot\..\Packages\HealthCore"
-     swift test
+  3) A repo gyokerebol:   .\scripts\hc.ps1 test
+     (a hc.ps1 kezeli a ket Windows-os buktatot: DLL-PATH es a szokozos profil-utvonal)
 Ha a 'swift' nem talalhato: jelentkezz ki/be, vagy indits ujra.
 ============================================================
 "@ -ForegroundColor Green

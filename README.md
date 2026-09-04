@@ -45,8 +45,8 @@ TraceLogic/
 
 ## Windows – gyors start
 
-1. Telepítsd a Swift toolchaint: <https://www.swift.org/install/windows/>
-2. `cd Packages/HealthCore && swift test`
+1. Swift + VS Build Tools telepítése: `scripts/setup-swift-windows.ps1` (rendszergazdaként) — részletek: [`docs/windows-swift-setup.md`](docs/windows-swift-setup.md)
+2. Build + teszt: **`.\scripts\hc.ps1 test`** (a nyers `swift test` itt nem megy — a `hc.ps1` kezeli a Windows-os buktatókat: runtime-DLL PATH és a szóközös profil-útvonal)
 
 ## Mac – gyors start
 
