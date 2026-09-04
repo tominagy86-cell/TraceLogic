@@ -3,8 +3,10 @@ import HealthCore
 
 struct DashboardView: View {
     @State private var model: DashboardModel
+    private let source: any HealthDataSource
 
     init(source: any HealthDataSource) {
+        self.source = source
         _model = State(initialValue: DashboardModel(source: source))
     }
 
@@ -31,6 +33,13 @@ struct DashboardView: View {
                 }
             }
             .navigationTitle(Branding.appName)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink("Inspector") {
+                        DataInspectorView(source: source)
+                    }
+                }
+            }
             .task { await model.load() }
             .refreshable { await model.load() }
         }
