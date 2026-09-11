@@ -53,16 +53,21 @@ benne apró hibák, amiket csak a Mac-en derül ki.
 | `HealthKit/SleepStage+HealthKit.swift` | `HKCategoryValueSleepAnalysis` → `SleepStage` |
 | `HealthKit/HealthKitAdapter.swift` | `actor`, a `HealthDataSource` teljes HealthKit-implementációja (minták, napi stat, alvás, edzés) |
 | `Store/StoredModels.swift` + `MetricStore.swift` + `ModelContainerFactory.swift` | SwiftData perzisztencia, `hkUUID`-alapú upsert-dedup |
-| `Sync/SyncCoordinator.swift` | `backfill(days:)` (90 nap) + `incrementalSync()` a `HealthDataSource`-ra építve — **még nincs bekötve az app UI-ba** |
+| `Sync/SyncCoordinator.swift` | `backfill(days:)` (90 nap) + `incrementalSync()` a `HealthDataSource`-ra építve — **2026-09-11-től bekötve a `RootView`-ba** (lásd lent) |
 | `Features/Permission/PermissionGateView.swift` | engedélykérő képernyő + `@Observable` modell |
 | `Features/Dashboard/DashboardView.swift` + `DashboardModel.swift` | „Legfrissebb értékek" lista, toolbarban link az Inspectorhoz |
 | `Features/DataInspector/DataInspectorView.swift` + `DataInspectorModel.swift` | metrika + időablak választó, `GapStats` (rések, lefedettség, forrásbontás), nyers minták listája |
 | `App/RootView.swift` | PermissionGate → Dashboard összekötve |
 
-**Fontos:** a `MetricStore` / `SyncCoordinator` **meg van írva, de a `RootView`/`App` még nem
-hívja** — a Dashboard egyelőre mindig élő HealthKit-lekérdezéssel dolgozik, nincs lokális cache
-és nincs 90 napos automata backfill elindítva. Ez a következő Mac-utáni lépés, miután a jelenlegi
-réteg lefordul és fut.
+**Frissítve 2026-09-11:** a `RootView` a Dashboard első megjelenésekor most már létrehozza a
+`ModelContainer`/`MetricStore`/`SyncCoordinator` hármast, és elindítja a szinkront — első
+alkalommal 90 napos `backfill()`-t, utána (a `heartRate` szinkron-állapota alapján eldöntve, hogy
+volt-e már backfill) `incrementalSync()`-et. **A Dashboard/DataInspector nézetek egyelőre
+változatlanul közvetlenül a `HealthDataSource`-ból olvasnak** (élő HealthKit-lekérdezés) — a
+`MetricStore`-ban gyűlő lokális cache még nincs bekötve egyik nézet olvasási oldalára sem, ez a
+következő lépés (pl. a leendő `MetricDetailView`-hoz vagy a baseline-motorhoz kell majd). Ezt a
+Mac-en még nem próbáltuk ki — a `@ModelActor`/SwiftData réteg még nem futott át semmilyen
+fordítón fizikai eszközön, csak a CI szimulátoros build/teszt igazolta, hogy lefordul.
 
 ### Amit szerdán konkrétan tesztelni kell (sorrendben)
 
@@ -96,8 +101,8 @@ igazolni, és néhány darab nincs bekötve az app tényleges futásába:
 
 | Fázis | Elem | Állapot |
 |---|---|---|
-| C | SwiftData perzisztencia (`StoredSample` stb., `MetricStore`) | kód kész, **nincs bekötve** a Dashboardba |
-| C | `SyncCoordinator` (90 napos backfill + inkrementális) | kód kész, **nincs elindítva** sehonnan |
+| C | SwiftData perzisztencia (`StoredSample` stb., `MetricStore`) | kód kész, szinkron írja, **a Dashboard olvasása még nincs átállítva rá** |
+| C | `SyncCoordinator` (90 napos backfill + inkrementális) | ✅ elindítva a `RootView`-ból (2026-09-11), Mac-en még nem igazolva |
 | C | `MetricDetailView` (7/28/90 napos grafikon) | ❌ nincs elkezdve |
 | D | `SleepSessionBuilder` | ✅ kész, Windows-on tesztelve (HealthCore) |
 | D | Edzés-lekérdezés (`HealthKitAdapter.workouts`) | kód kész, nem verifikált |

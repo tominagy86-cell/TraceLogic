@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import HealthCore
 
 /// Belépő nézet: engedélykapu → Dashboard.
@@ -13,6 +14,23 @@ struct RootView: View {
     var body: some View {
         PermissionGateView(source: healthSource) {
             DashboardView(source: healthSource)
+                .task { await startSync() }
+        }
+    }
+
+    /// Első alkalommal 90 napos backfill, utána (minden további Dashboard-megjelenéskor)
+    /// inkrementális szinkron — feltölti/frissíti a `MetricStore` SwiftData-cache-ét.
+    /// A `heartRate` szinkron-állapotát használjuk jelzőnek, hogy volt-e már backfill.
+    private func startSync() async {
+        guard let container = try? ModelContainerFactory.makeDefault() else { return }
+        let store = MetricStore(modelContainer: container)
+        let coordinator = SyncCoordinator(source: healthSource, store: store)
+
+        let hasSyncedBefore = (try? await store.syncStateSnapshot(for: .heartRate))?.lastRunAt != nil
+        if hasSyncedBefore {
+            await coordinator.incrementalSync()
+        } else {
+            await coordinator.backfill()
         }
     }
 }
